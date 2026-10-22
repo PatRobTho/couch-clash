@@ -62,8 +62,8 @@ function connect(){es?.close();es=new EventSource(`/events?room=${me.room}&id=${
 function render(){const key=S.phase+S.round,old=$('#in'),val=old?.value,foc=old&&document.activeElement===old;
  me.host?tv():phone();
  const n=$('#in');if(n&&val&&key===lastKey){n.value=val;if(foc)n.focus()}lastKey=key}
-const quest=()=>S.cur?.q?`<div class="big pop">${E(S.cur.q)}</div>`':'';
-const timer=()=>S.deadline?`<div><span class="tt"></span><div class="bar"><i></i></div></div>`':'';
+const quest=()=>S.cur?.q?`<div class="big pop">${E(S.cur.q)}</div>`:'';
+const timer=()=>S.deadline?`<div><span class="tt"></span><div class="bar"><i></i></div></div>`:'';
 const nm=id=>{const p=S.players.find(x=>x.id===id);return p?`${p.avatar} ${E(p.name)}`:'?'};
 function tv(){const P=S.players;let m='';
  const side=`<aside aria-label="Scoreboard">${[...P].sort((a,b)=>b.score-a.score).map(p=>`<div class="pl ${p.on?'':'off'}"><b>${p.avatar}</b><span>${E(p.name)}</span><em style="font-style:normal">${p.score}${p.delta?` <small>+${p.delta}</small>`:''}</em>${p.done?'<u aria-label="done">✓</u>':''}</div>`).join('')||'<p class="c">Waiting for players…</p>'}</aside>`;
