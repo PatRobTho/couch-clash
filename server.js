@@ -9,7 +9,7 @@ const tok = () => crypto.randomBytes(16).toString('hex');
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const AL = 'ABCDEFGHJKMNPQRSTUVWXYZ';
 const newCode = () => { for (;;) { let c = ''; for (let i = 0; i < 4; i++) c += AL[rnd(AL.length)]; if (!rooms.has(c)) return c; } };
-const clean = (s, n) => String(s ?? '').replace(/[<>\x00-\x1f]/g, '').trim().slice(0, n);
+const clean = (s, n) => String(s ?? '').replace(/[<>\u0000-\u001f]/g, '').trim().slice(0, n);
 
 const textGame = (secs, make, pub, valid, opts, score) => ({ secs, vote: true, make, pub, valid, opts, score });
 const GAMES = {
