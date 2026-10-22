@@ -1,0 +1,104 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Couch Clash</title>
+<style>
+:root{--bg:#1b1033;--bg2:#2d1b5e;--ink:#fff8e7;--sun:#ffc93c;--teal:#19c6b7;--pink:#ff5c8a;--vio:#7b5cff;--card:#ffffff1a}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{font-family:"Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;color:var(--ink);background:radial-gradient(circle at 20% 0,var(--bg2),var(--bg) 60%) fixed;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+button,input{font:inherit}button{cursor:pointer;border:0;border-radius:18px;padding:14px 22px;background:var(--sun);color:#2a1a00;font-weight:900;font-size:1.1rem;box-shadow:0 5px 0 #b88a00;touch-action:manipulation}
+button:active{transform:translateY(4px);box-shadow:0 1px 0 #b88a00}button:focus-visible,input:focus-visible{outline:4px solid var(--teal);outline-offset:2px}
+button.alt{background:var(--card);color:var(--ink);box-shadow:0 5px 0 #0004}button:disabled{opacity:.45}
+input{width:100%;padding:16px;border-radius:16px;border:3px solid #fff4;background:#0003;color:var(--ink);font-size:1.3rem}
+h1,h2{margin:0}.c{text-align:center}.wrap{max-width:560px;margin:0 auto;padding:20px}
+#off{position:fixed;top:0;left:0;right:0;background:var(--pink);text-align:center;padding:8px;font-weight:900;z-index:9}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000c;padding:12px 20px;border-radius:30px;z-index:9}
+.logo{font-size:clamp(2.6rem,9vw,5rem);letter-spacing:-2px;transform:rotate(-2deg);text-shadow:4px 4px 0 var(--pink)}
+.av{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:12px 0}.av button{padding:8px;font-size:1.6rem;background:var(--card);box-shadow:none}.av button[aria-pressed=true]{background:var(--sun);outline:3px solid #fff}
+/* TV */
+.tv{display:grid;grid-template-columns:1fr clamp(220px,24vw,380px);gap:2vw;min-height:100vh;padding:2vw}
+.tv main{display:flex;flex-direction:column;justify-content:center;gap:2vh;min-width:0}
+.tv aside{background:var(--card);border-radius:24px;padding:14px;align-self:start}
+.pl{display:flex;align-items:center;gap:10px;padding:8px;border-radius:14px;font-size:clamp(1rem,1.7vw,1.7rem)}.pl b{font-size:1.6em}.pl span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pl.off{opacity:.4}.pl u{text-decoration:none;color:var(--teal)}.pl small{color:var(--sun)}
+.big{font-size:clamp(2rem,4.6vw,5rem);line-height:1.1}.code{font-size:clamp(4rem,12vw,11rem);letter-spacing:.08em;color:var(--sun);line-height:1;text-shadow:5px 5px 0 var(--pink)}
+.lobby{display:flex;gap:3vw;align-items:center;flex-wrap:wrap}.qr{background:#fff;padding:14px;border-radius:20px;line-height:0}
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.games button{text-align:left;background:var(--vio);color:#fff;box-shadow:0 5px 0 #3a2a99}.games small{display:block;font-weight:400;opacity:.85}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}.opt{border-radius:20px;padding:2vh 1.5vw;font-size:clamp(1.3rem,2.6vw,2.8rem);background:var(--card)}.opt.ok{background:var(--teal);color:#06302c}.opt.bad{opacity:.45}.opt em{float:right;font-style:normal}
+.bar{height:16px;background:#0004;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;width:100%;background:var(--sun);transition:width .25s linear}
+.tt{font-size:2rem;color:var(--sun)}.tag{background:var(--pink);padding:4px 14px;border-radius:20px;font-size:1.1rem;display:inline-block}
+ol.r{font-size:clamp(1.3rem,2.6vw,2.6rem);padding-left:1.4em}
+/* phone */
+.ph{max-width:520px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px;min-height:100vh}
+.me{display:flex;align-items:center;gap:10px;font-size:1.3rem}.me b{font-size:2rem}.me em{margin-left:auto;font-style:normal;color:var(--sun)}
+.ph .opts{grid-template-columns:1fr 1fr}.ph .opts button,.vb{min-height:96px;font-size:1.3rem;background:var(--vio);color:#fff;box-shadow:0 5px 0 #3a2a99}
+.vb{width:100%;min-height:64px;margin-bottom:10px;text-align:left}.vb:disabled{background:#555;color:#ccc}
+.card{background:var(--card);padding:16px;border-radius:20px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:800px){.tv{grid-template-columns:1fr}}
+.pop{animation:pop .4s}@keyframes pop{from{transform:scale(.8);opacity:0}}
+</style></head><body>
+<div id="off" hidden role="alert">Reconnecting…</div><div id="app"></div><div id="toast" hidden role="status"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const $=s=>document.querySelector(s), E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const AV=['🦊','🐼','🐸','🦄','🐙','🐵','🦖','🐧','🐝','🦉','🐳','🐯'], SH=['▲','◆','●','■'];
+let S,skew=0,es,lastKey='',avatar=AV[0],qrNode=null,qrFor='';
+const sess=()=>JSON.parse(sessionStorage.getItem('cc_host')||localStorage.getItem('cc_player')||'null');
+let me=sess();
+const post=async(p,b)=>{try{const r=await fetch(p,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)});return await r.json()}catch{return{err:'No connection. Check your Wi-Fi.'}}};
+const toast=m=>{const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2800)};
+const act=async(type,x={})=>{const r=await post('/act',{room:me.room,id:me.id,tok:me.tok,type,...x});if(r.err)toast(r.err);return r};
+function home(){const j=new URLSearchParams(location.search).get('join');
+ $('#app').innerHTML=`<div class="wrap c"><h1 class="logo">Couch Clash</h1><p>Your phone is the controller. The TV is the show.</p>
+ ${j?'':`<button id="host" style="width:100%;font-size:1.5rem;margin:8px 0">Host a Game (on the TV)</button><p>or join a game:</p>`}
+ <div class="card" style="text-align:left"><input id="rc" placeholder="Room code" maxlength="4" autocapitalize="characters" autocomplete="off" value="${E(j||'')}" aria-label="Room code">
+ <p></p><input id="nm" placeholder="Your name" maxlength="14" aria-label="Your name"><div class="av" role="group" aria-label="Pick an avatar">${AV.map(a=>`<button type="button" aria-pressed="${a===avatar}" data-av="${a}">${a}</button>`).join('')}</div>
+ <button id="join" style="width:100%">Join</button></div></div>`;
+ $('#host')?.addEventListener('click',async()=>{const r=await post('/create',{});if(r.err)return toast(r.err);me={...r,host:1};sessionStorage.setItem('cc_host',JSON.stringify(me));connect()});
+ document.querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>{avatar=b.dataset.av;document.querySelectorAll('[data-av]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+ $('#join').onclick=async()=>{const r=await post('/join',{room:$('#rc').value,name:$('#nm').value,avatar});if(r.err)return toast(r.err);me=r;localStorage.setItem('cc_player',JSON.stringify(me));history.replaceState(0,'','/');connect()}}
+function connect(){es?.close();es=new EventSource(`/events?room=${me.room}&id=${me.id}&tok=${me.tok}`);
+ es.onmessage=e=>{S=JSON.parse(e.data);skew=S.now-Date.now();$('#off').hidden=true;render()};
+ es.addEventListener('gone',()=>{es.close();sessionStorage.removeItem('cc_host');localStorage.removeItem('cc_player');me=null;S=null;home();toast('That room has ended or you were removed.')});
+ es.onerror=()=>$('#off').hidden=false}
+function render(){const key=S.phase+S.round,old=$('#in'),val=old?.value,foc=old&&document.activeElement===old;
+ me.host?tv():phone();
+ const n=$('#in');if(n&&val&&key===lastKey){n.value=val;if(foc)n.focus()}lastKey=key}
+const quest=()=>S.cur?.q?`<div class="big pop">${E(S.cur.q)}</div>`':'';
+const timer=()=>S.deadline?`<div><span class="tt"></span><div class="bar"><i></i></div></div>`':'';
+const nm=id=>{const p=S.players.find(x=>x.id===id);return p?`${p.avatar} ${E(p.name)}`:'?'};
+function tv(){const P=S.players;let m='';
+ const side=`<aside aria-label="Scoreboard">${[...P].sort((a,b)=>b.score-a.score).map(p=>`<div class="pl ${p.on?'':'off'}"><b>${p.avatar}</b><span>${E(p.name)}</span><em style="font-style:normal">${p.score}${p.delta?` <small>+${p.delta}</small>`:''}</em>${p.done?'<u aria-label="done">✓</u>':''}</div>`).join('')||'<p class="c">Waiting for players…</p>'}</aside>`;
+ const ph=S.phase,url=`${location.origin}/?join=${S.code}`;
+ if(ph==='lobby')m=`<div class="lobby"><div><h2>Join at <span style="color:var(--sun)">${E(location.host)}</span></h2><div class="code" aria-label="Room code ${S.code.split('').join(' ')}">${S.code}</div></div><div class="qr" id="qr"></div></div>
+  <h2>${P.length?'Pick a game':'Scan the code with your phone camera'}</h2><div class="games">${S.games.map(g=>`<button data-a="start" data-g="${g.id}">${E(g.name)}<small>${E(g.d)} · ${g.min}+ players</small></button>`).join('')}</div>
+  <div><button class="alt" data-a="lock">${S.locked?'Unlock room':'Lock room'}</button></div>`;
+ else if(ph==='rules')m=`<span class="tag">How to play</span><h1 class="big">${E(S.gname)}</h1><ol class="r">${S.rules.map(r=>`<li>${E(r)}</li>`).join('')}</ol><div><button data-a="next">Got it, start!</button></div>`;
+ else if(ph==='final'){const w=[...P].sort((a,b)=>b.score-a.score);m=`<span class="tag">Final results</span><h1 class="big pop">🏆 ${w[0]?E(w[0].name):''} wins!</h1><ol class="r">${w.map(p=>`<li>${p.avatar} ${E(p.name)}: ${p.score}</li>`).join('')}</ol><div style="display:flex;gap:12px;flex-wrap:wrap"><button data-a="again">Play again</button><button class="alt" data-a="lobby">Choose another game</button></div>`}
+ else{const c=S.cur,head=`<div><span class="tag">${E(S.gname)} · Round ${S.round}/${S.total}</span></div>`,done=P.filter(p=>p.done).length;
+  if(ph==='submit'){const hint={trivia:'',estimate:`Answer in ${E(c.unit)}`,bluff:'Write a believable FAKE answer on your phone',caption:'Write a caption on your phone'}[S.game];
+   m=head+quest()+(c.opts?`<div class="opts">${c.opts.map((o,i)=>`<div class="opt">${SH[i]} ${E(o)}</div>`).join('')}</div>`:`<h2>${hint}</h2>`)+timer()+`<h2>${done}/${P.filter(p=>p.on).length} answered</h2>`}
+  else if(ph==='vote')m=head+quest()+`<h2>Vote on your phone for the TRUE one / your favorite</h2><div class="opts">${S.opts.map((o,i)=>`<div class="opt">${'ABCDEFGH'[i]}. ${E(o.text)}</div>`).join('')}</div>`+timer()+`<h2>${done} voted</h2>`;
+  else{ m=head+quest();
+   if(S.game==='trivia')m+=`<div class="opts">${c.opts.map((o,i)=>`<div class="opt ${i===S.info.ans?'ok':'bad'}">${SH[i]} ${E(o)}<em>${S.info.counts[i]} 👤</em></div>`).join('')}</div>`;
+   else if(S.game==='estimate')m+=`<h1 class="big pop">${S.info.ans} ${E(S.info.unit)}</h1><ol class="r">${S.info.guesses.slice(0,5).map(g=>`<li>${nm(g.id)}: ${g.v}</li>`).join('')}</ol>`;
+   else m+=S.opts?`<div class="opts">${S.opts.map(o=>`<div class="opt ${o.truth?'ok':''}">${E(o.text)}<br><small>${o.truth?'✅ THE TRUTH':'by '+nm(o.owner)} · ${o.votes.length} vote${o.votes.length==1?'':'s'}</small></div>`).join('')}</div>`:'<h2>Nobody answered!</h2>';
+   m+=`<div><button class="alt" data-a="next">Next</button></div>`}}
+ $('#app').innerHTML=`<div class="tv"><main>${m}</main>${side}</div>`;
+ const q=$('#qr');if(q){if(qrFor!==url){qrNode=document.createElement('div');qrFor=url;if(window.QRCode)new QRCode(qrNode,{text:url,width:260,height:260,correctLevel:QRCode.CorrectLevel.M});else qrNode.textContent=url}q.appendChild(qrNode)}}
+function phone(){const p=S.players.find(x=>x.id===S.me)||{avatar:'?',name:'',score:0},ph=S.phase;let m='';
+ const wait=t=>`<div class="card c pop"><h2>${t}</h2></div>`;
+ if(ph==='lobby')m=wait('You\'re in! Watch the TV 📺');
+ else if(ph==='rules')m=wait(`${E(S.gname)}: get ready!`);
+ else if(ph==='final'){const w=[...S.players].sort((a,b)=>b.score-a.score);m=wait(`You finished #${w.findIndex(x=>x.id===S.me)+1} with ${p.score}`)}
+ else if(ph==='submit'){const c=S.cur;
+  if(S.mine!==undefined)m=wait(`Locked in ✓<br><small>${E(S.mine)}</small>`)+timer();
+  else if(c.opts)m=`<div class="card">${E(c.q)}</div><div class="opts">${c.opts.map((o,i)=>`<button data-a="submit" data-v="${i}" aria-label="${E(o)}">${SH[i]}<br>${E(o)}</button>`).join('')}</div>`+timer();
+  else m=`<div class="card">${E(c.q)}</div><input id="in" ${S.game==='estimate'?`type="number" inputmode="decimal" placeholder="Your guess (${E(c.unit)})"`:`maxlength="${S.game==='bluff'?60:80}" placeholder="${S.game==='bluff'?'A believable fake answer':'Your caption'}" autocomplete="off"`}><button data-a="send">Send</button>`+timer()}
+ else if(ph==='vote')m=S.myVote!==undefined?wait('Vote locked in ✓')+timer():`<div class="card">${E(S.cur.q)}</div>${S.opts.map(o=>`<button class="vb" data-a="vote" data-v="${o.i}" ${o.mine?'disabled':''}>${E(o.text)}${o.mine?' (yours)':''}</button>`).join('')}`+timer();
+ else m=wait(p.delta?`+${p.delta} points! 🎉`:'No points this round')+`<p class="c">Look at the TV</p>`;
+ $('#app').innerHTML=`<div class="ph"><div class="me"><b>${p.avatar}</b>${E(p.name)}<em>${p.score} pts</em></div>${m}</div>`}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||!me)return;const a=b.dataset.a;
+ if(a==='send'){const v=$('#in').value;if(!v.trim())return;act('submit',{v:S.game==='estimate'?parseFloat(v):v})}
+ else if(a==='submit'||a==='vote')act(a,{v:+b.dataset.v}); else act(a,{game:b.dataset.g})});
+setInterval(()=>{if(!S||!S.deadline)return;const l=Math.max(0,S.deadline-(Date.now()+skew));document.querySelectorAll('.tt').forEach(e=>e.textContent=Math.ceil(l/1000)+'s');document.querySelectorAll('.bar i').forEach(e=>e.style.width=l/(S.secs*1000)*100+'%')},200);
+if(me)connect();else home();
+</script></body></html>
